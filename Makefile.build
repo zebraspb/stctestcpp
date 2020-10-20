@@ -1,0 +1,18 @@
+
+SRC = $(wildcard src/*.cpp)
+HDR = $(wildcard src/*.h)
+
+BINARY=testcpp
+
+all:build.stamp out/$(BINARY)
+	@echo Done!
+
+
+build.stamp:
+	mkdir -p out
+	touch out/build.stamp
+
+
+./out/$(BINARY):$(SRC) $(HDR) Makefile
+	g++-7 -O3 -o ./out/$(BINARY) $(SRC) -std=c++17
+
