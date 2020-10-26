@@ -43,11 +43,7 @@ public:
 		std::string outputfilename ;
 	} ;
 
-
-	enum action_en action ;
 	std::variant<generatefile_st, splitdata_st, order_st, receivepackets_st> v ;
-
-	parsedstring_t( ) : action( action_en::unknown ) { }
 } ;
 
 

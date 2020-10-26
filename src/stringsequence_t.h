@@ -4,6 +4,7 @@
 #include <list>
 #include <random>
 #include <fstream>
+#include <iostream>
 
 
 class stringsequence_t {

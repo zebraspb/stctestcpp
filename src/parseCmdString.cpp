@@ -9,45 +9,42 @@
 
 
 bool parsecmdstring_t::parsecmdstring( int argc, char **argv ) {
-
 	static const char* opts = "hgsor";
-
 	static struct option longopt[] = {
-										 { "help",     no_argument, 0, opts[ 0 ] },
-										 { "generate", no_argument, 0, opts[ 1 ] },
-										 { "split",    no_argument, 0, opts[ 2 ] },
-										 { "order",    no_argument, 0, opts[ 3 ] },
-										 { "recv",     no_argument, 0, opts[ 4 ] },
-										 { "stringmaxlen", required_argument, 0, 0 },
-										 { "stringcount",  required_argument, 0, 0 },
-										 { "packetsize",   required_argument, 0, 0 },
-										 { "infile",       required_argument, 0, 0 },
-										 { "outfile",      required_argument, 0, 0 },
-										 { 0, 0, 0, 0 }  } ;
+										{ "help",     no_argument, nullptr, opts[ 0 ] },
+										{ "generate", no_argument, nullptr, opts[ 1 ] },
+										{ "split",    no_argument, nullptr, opts[ 2 ] },
+										{ "order",    no_argument, nullptr, opts[ 3 ] },
+										{ "recv",     no_argument, nullptr, opts[ 4 ] },
+										{ "stringmaxlen", required_argument, nullptr, 0 },
+										{ "stringcount",  required_argument, nullptr, 0 },
+										{ "packetsize",   required_argument, nullptr, 0 },
+										{ "infile",       required_argument, nullptr, 0 },
+										{ "outfile",      required_argument, nullptr, 0 },
+										{ nullptr, 0, nullptr, 0 }  } ;
 
-	parsedstring_t::generatefile_st 	generate ;
-	parsedstring_t::splitdata_st 		split;
-	parsedstring_t::order_st	order ;
-	parsedstring_t::receivepackets_st	recv ;
-	
-										
+	parsedstring_t::generatefile_st   generate ;
+	parsedstring_t::splitdata_st      split;
+	parsedstring_t::order_st          order ;
+	parsedstring_t::receivepackets_st recv ;
+
+	int mode = 0 ;
+
 	while( 1 ) {
 		int index = -1;
 		int c ;
 		if( ( c = getopt_long( argc, argv, opts, longopt, &index ) ) == -1 ) break ;
 
-//		std::cout << "c " << c << " index " << index << std::endl ;
-
-		if( opts[ 0 ] == c ) {
-			p_s.action = parsedstring_t::action_en::help ;
+		if( opts[ 0 ] == c ) { // --help
+			// help process here, up retrun false
 			usage( argv[ 0 ] ) ;
-			return true ;
-		} 
-		else if( opts[ 1 ] == c ) p_s.action = parsedstring_t::action_en::generate ;
-		else if( opts[ 2 ] == c ) p_s.action = parsedstring_t::action_en::split ;
-		else if( opts[ 3 ] == c ) p_s.action = parsedstring_t::action_en::order ;
-		else if( opts[ 4 ] == c ) p_s.action = parsedstring_t::action_en::recv ;
-		else if( 0 == c ) {
+			return false ;
+		}
+		else if( ( opts[ 1 ] == c ) ||
+				 ( opts[ 2 ] == c ) ||
+				 ( opts[ 3 ] == c ) ||
+				 ( opts[ 4 ] == c ) )	 mode = c ;
+		else if( 0 == c ) { // process optionse
 			if( 5 == index ) { // stringmaxlen
 				std::stringstream ss ;
 				ss << optarg ;
@@ -75,29 +72,33 @@ bool parsecmdstring_t::parsecmdstring( int argc, char **argv ) {
 		}
 	} // end of parse
 
-	switch( p_s.action ) {
-		case parsedstring_t::action_en::generate:
-			if( generate.filename.empty() || 0 == generate.stringcount  || 0 == generate.stringmaxlen ) return false ;
-			p_s.v.emplace<parsedstring_t::generatefile_st>( std::move( generate ) ) ;
+	if( opts[ 1 ] == mode ) { // generate
+		if( generate.filename.empty() || 0 == generate.stringcount  || 0 == generate.stringmaxlen ) return false ;
+		p_s.v.emplace<parsedstring_t::generatefile_st>( std::move( generate ) ) ;
 
-			return true ;
-		case parsedstring_t::action_en::split:
-			if( split.inputfilename.empty() || split.outputfilename.empty() || 0 == split.packetsize ) return false ;
-			p_s.v.emplace<parsedstring_t::splitdata_st>( std::move( split ) ) ;
+		return true ;
+	} else if( opts[ 2 ] == mode ) { //split
+		if( split.inputfilename.empty() || split.outputfilename.empty() || 0 == split.packetsize ) return false ;
+		p_s.v.emplace<parsedstring_t::splitdata_st>( std::move( split ) ) ;
+		return true ;
+	} else if( opts[ 3 ] == mode ) { // order
+		if( order.inputfilename.empty() || order.outputfilename.empty()  ) return false ;
+		p_s.v.emplace<parsedstring_t::order_st>( std::move( order ) ) ;
 
-			return true ;
-		case parsedstring_t::action_en::order:
-			if( order.inputfilename.empty() || order.outputfilename.empty()  ) return false ;
-			p_s.v.emplace<parsedstring_t::order_st>( std::move( order ) ) ;
-
-			return true ;
-		case parsedstring_t::action_en::recv:
-			if( recv.inputfilename.empty() || recv.outputfilename.empty()  ) return false ;
-			p_s.v.emplace<parsedstring_t::receivepackets_st>( std::move( recv ) ) ;
-			return true ;
+		return true ;
+	} else if( opts[ 4 ] == mode ) { // recv
+		if( recv.inputfilename.empty() || recv.outputfilename.empty()  ) return false ;
+		p_s.v.emplace<parsedstring_t::receivepackets_st>( std::move( recv ) ) ;
+		return true ;
 	}
+
+	std::cerr << "programm options is incorrect : " ;
+	for( auto i = 1; i < argc; ++i ) std::cerr << argv[ i ] << " " ;
+	std::cerr << std::endl ;
+
+	usage( argv[ 0 ] ) ;
+
 	return false ;
-	
 }
 
 

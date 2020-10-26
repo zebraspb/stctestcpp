@@ -1,12 +1,12 @@
 #pragma once
 
-
 #include "packet_t.h"
-
 
 #include <list>
 #include <string>
 #include <vector>
+#include <iostream>
+#include <fstream>
 
 
 class splitter_t {
@@ -16,11 +16,11 @@ public:
  
 	void process( const std::list<std::string> &sequence ) {
 		auto it = sequence.begin( ) ;
-		for( int i = 0; it != sequence.end( ); ++i ) {
+		for( uint32_t i = 0, j = 0; it != sequence.end( ); ++i ) {
 			packet_t packet( i, max_packet_payload ) ;
 
-			for( ;it != sequence.end( ); ++it ) {
-				auto ret = packet.add_elem( it->data(), it->size(), std::distance(sequence.begin( ), it) ) ;
+			for( ;it != sequence.end( ); ++it, ++j ) {
+				auto ret = packet.add_elem( it->data(), it->size(), j ) ;
 				if( ret != packet_t::addelemret::add_full ) break ;
 			}
 			auto p = packet.get_packet( ) ;
@@ -69,7 +69,7 @@ public:
 			packet_head_st *ph = reinterpret_cast<packet_head_st *>( vec.data() + progress ) ;
 			progress += sizeof( packet_head_st ) ;
 
-			for( auto i = 0 ; i < ph->elements_count; ++i ) {
+			for( uint32_t i = 0 ; i < ph->elements_count; ++i ) {
 				fs.read( reinterpret_cast<char*>( vec.data() + progress ), sizeof( element_head_st ) ) ;
 				element_head_st *eh = reinterpret_cast<element_head_st *>( vec.data() + progress ) ;
 				progress += sizeof( element_head_st ) ;
